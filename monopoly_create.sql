@@ -157,3 +157,92 @@ ADD ( CONSTRAINT transactions_game_fk
         FOREIGN KEY (game, to_pawn)
         REFERENCES players (game, pawn)
     );
+
+REM ********************************************************************
+REM BOARD_SQUARES is the fixed board layout: one row per position on the
+REM board. `kind` classifies the square; `property` links the (at most
+REM one) PROPERTY sitting on that square, so it is UNIQUE and nullable
+REM (special squares such as GO or JAIL hold no property).
+
+Prompt ******  Creating BOARD_SQUARES table ....
+
+CREATE TABLE board_squares
+    ( position      INTEGER
+    , name          VARCHAR2(255)
+    , kind          VARCHAR2(20)
+    , property      INTEGER
+    , CONSTRAINT board_squares_pk PRIMARY KEY (position)
+    , CONSTRAINT board_squares_property_uk UNIQUE (property)
+    , CONSTRAINT board_squares_kind_ck CHECK
+        ( kind IN ( 'GO', 'PROPERTY', 'RAILROAD', 'UTILITY', 'TAX'
+                  , 'CHANCE', 'COMMUNITY_CHEST', 'JAIL', 'FREE_PARKING'
+                  , 'GO_TO_JAIL' ) )
+    );
+
+ALTER TABLE board_squares
+ADD ( CONSTRAINT board_squares_property_fk
+        FOREIGN KEY (property)
+        REFERENCES properties (id)
+    );
+
+REM ********************************************************************
+REM CARDS is the Chance / Community Chest deck. `cash_delta` is the money
+REM the drawing player collects (positive) or pays (negative).
+
+Prompt ******  Creating CARDS table ....
+
+CREATE TABLE cards
+    ( id            INTEGER
+    , deck          VARCHAR2(20)
+    , description   VARCHAR2(255)
+    , cash_delta    INTEGER DEFAULT 0
+    , CONSTRAINT cards_pk PRIMARY KEY (id)
+    , CONSTRAINT cards_deck_ck CHECK (deck IN ('CHANCE', 'COMMUNITY_CHEST'))
+    );
+
+REM ********************************************************************
+REM DICE_ROLLS logs every roll a PLAYER makes, identified by the turn it
+REM happened on. Depends on PLAYERS, so its key includes (game, pawn).
+
+Prompt ******  Creating DICE_ROLLS table ....
+
+CREATE TABLE dice_rolls
+    ( game          INTEGER
+    , pawn          INTEGER
+    , turn_no       INTEGER
+    , die1          INTEGER
+    , die2          INTEGER
+    , CONSTRAINT dice_rolls_pk PRIMARY KEY (game, pawn, turn_no)
+    , CONSTRAINT dice_rolls_die1_ck CHECK (die1 BETWEEN 1 AND 6)
+    , CONSTRAINT dice_rolls_die2_ck CHECK (die2 BETWEEN 1 AND 6)
+    );
+
+ALTER TABLE dice_rolls
+ADD ( CONSTRAINT dice_rolls_player_fk
+        FOREIGN KEY (game, pawn)
+        REFERENCES players (game, pawn)
+    );
+
+REM ********************************************************************
+REM CARD_DRAWS records a PLAYER drawing a CARD during a game: the
+REM associative table between PLAYERS and CARDS.
+
+Prompt ******  Creating CARD_DRAWS table ....
+
+CREATE TABLE card_draws
+    ( id            INTEGER
+    , game          INTEGER
+    , pawn          INTEGER
+    , card          INTEGER
+    , turn_no       INTEGER
+    , CONSTRAINT card_draws_pk PRIMARY KEY (id)
+    );
+
+ALTER TABLE card_draws
+ADD ( CONSTRAINT card_draws_player_fk
+        FOREIGN KEY (game, pawn)
+        REFERENCES players (game, pawn)
+    , CONSTRAINT card_draws_card_fk
+        FOREIGN KEY (card)
+        REFERENCES cards (id)
+    );

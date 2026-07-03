@@ -19,6 +19,10 @@ erDiagram
     
     %% Other Relations
     properties ||--o{ property_items : "represented by"
+    properties |o--o| board_squares : "located at"
+    players ||--o{ dice_rolls : "rolls"
+    players ||--o{ card_draws : "draws"
+    cards ||--o{ card_draws : "drawn as"
 
     %% Tables
     sets {
@@ -68,6 +72,36 @@ erDiagram
     cashbag_items {
         INTEGER id PK, FK
         INTEGER count
+    }
+
+    board_squares {
+        INTEGER position PK
+        VARCHAR2(255) name
+        VARCHAR2(20) kind
+        INTEGER property FK "NULL, UK"
+    }
+
+    cards {
+        INTEGER id PK
+        VARCHAR2(20) deck
+        VARCHAR2(255) description
+        INTEGER cash_delta
+    }
+
+    dice_rolls {
+        INTEGER game PK, FK
+        INTEGER pawn PK, FK
+        INTEGER turn_no PK
+        INTEGER die1
+        INTEGER die2
+    }
+
+    card_draws {
+        INTEGER id PK
+        INTEGER game FK
+        INTEGER pawn FK
+        INTEGER card FK
+        INTEGER turn_no
     }
 ```
 
