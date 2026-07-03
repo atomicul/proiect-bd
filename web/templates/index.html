@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Monopoly games{% endblock %}
+{% block content %}
+    <h1>Monopoly games</h1>
+    {% if games %}
+    <table>
+        <thead>
+            <tr><th>#</th><th>Name</th><th>Players</th></tr>
+        </thead>
+        <tbody>
+            {% for game in games %}
+            <tr>
+                <td>{{ game.id }}</td>
+                <td><a href="{{ url_for('game', game_id=game.id) }}">{{ game.friendly_name or "(unnamed)" }}</a></td>
+                <td>{{ game.player_count }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="muted">No games recorded yet.</p>
+    {% endif %}
+{% endblock %}

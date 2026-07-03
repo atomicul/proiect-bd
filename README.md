@@ -91,6 +91,10 @@ ORACLE_DATABASE=monopoly
 3. Connection details are printed on screen once the container gets done booting
 up
 
+4. Open the web UI at <http://localhost:8080> to browse the games and their
+state (players, positions, owned properties and cash). The pages are rendered
+server-side from the database.
+
 > **Note:**
 > If you don't have an SQL client at hand you can get shell access to the DB
 > with docker exec: \

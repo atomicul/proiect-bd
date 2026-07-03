@@ -1,0 +1,24 @@
+[project]
+name = "monopoly-web"
+version = "0.1.0"
+description = "Server-side rendered viewer for Monopoly game state"
+requires-python = ">=3.14"
+dependencies = [
+    "flask",
+    "gunicorn",
+    "oracledb",
+]
+
+[dependency-groups]
+dev = ["pyright", "ruff"]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+target-version = "py314"
+
+[tool.pyright]
+pythonVersion = "3.14"
+include = ["app.py", "db.py"]
+typeCheckingMode = "basic"

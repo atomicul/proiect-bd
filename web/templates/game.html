@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}{{ game.friendly_name or "Game #" ~ game.id }}{% endblock %}
+{% block content %}
+    <p><a href="{{ url_for('index') }}">&larr; All games</a></p>
+    <h1>{{ game.friendly_name or "Game #" ~ game.id }}</h1>
+
+    {% if players %}
+    {% for player in players %}
+    <div class="player">
+        <h2>Pawn {{ player.pawn }}
+            {% if player.username %}&mdash; {{ player.username }}{% else %}<span class="muted">&mdash; anonymous</span>{% endif %}
+        </h2>
+        <p>Position: <strong>{{ player.current_position }}</strong> &middot; Cash: <strong>{{ player.cash }}</strong></p>
+        {% if player.properties %}
+        <table>
+            <thead>
+                <tr><th>Property</th><th>Set</th><th>Price</th></tr>
+            </thead>
+            <tbody>
+                {% for prop in player.properties %}
+                <tr>
+                    <td>{{ prop.name }}</td>
+                    <td><span class="swatch" style="background: {{ prop.set_color }}"></span>{{ prop.set_color }}</td>
+                    <td>{{ prop.price }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="muted">Owns no properties.</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+    {% else %}
+    <p class="muted">This game has no players.</p>
+    {% endif %}
+{% endblock %}

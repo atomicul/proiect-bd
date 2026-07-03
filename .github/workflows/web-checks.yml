@@ -1,0 +1,33 @@
+name: Web checks
+
+on:
+  push:
+    paths:
+      - 'web/**'
+      - '.github/workflows/web-checks.yml'
+  pull_request:
+    paths:
+      - 'web/**'
+      - '.github/workflows/web-checks.yml'
+
+jobs:
+  lint-and-typecheck:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+
+      - run: uv sync --frozen
+
+      - name: ruff format
+        run: uv run ruff format --check
+
+      - name: ruff lint
+        run: uv run ruff check
+
+      - name: pyright
+        run: uv run pyright
