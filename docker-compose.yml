@@ -1,0 +1,9 @@
+services:
+  oracle:
+    image: ghcr.io/atomicul/proiect-bd:latest
+    ports:
+      - "1521:1521"
+    environment:
+      APP_USER: ${APP_USER:-monopoly}
+      APP_USER_PASSWORD: ${APP_USER_PASSWORD:?APP_USER_PASSWORD must be set in .env}
+      ORACLE_DATABASE: ${ORACLE_DATABASE:-monopoly}
