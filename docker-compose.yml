@@ -7,6 +7,12 @@ services:
       APP_USER: ${APP_USER:-monopoly}
       APP_USER_PASSWORD: ${APP_USER_PASSWORD:?APP_USER_PASSWORD must be set in .env}
       ORACLE_DATABASE: ${ORACLE_DATABASE:-monopoly}
+    healthcheck:
+      test: ["CMD", "healthcheck.sh"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
 
   web:
     image: ghcr.io/atomicul/proiect-bd/web:latest
