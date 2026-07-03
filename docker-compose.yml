@@ -9,7 +9,7 @@ services:
       ORACLE_DATABASE: ${ORACLE_DATABASE:-monopoly}
 
   web:
-    build: ./web
+    image: ghcr.io/atomicul/proiect-bd/web:latest
     ports:
       - "8080:8080"
     environment:
