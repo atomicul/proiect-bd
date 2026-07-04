@@ -1,0 +1,233 @@
+-- NUME SI PRENUME: Soare Mihai
+-- GRUPA: 152
+-- GESTIUNEA UNEI PARTIDE DE MONOPOLY
+
+-- SCRIPT CREATE
+
+CREATE TABLE sets (
+    color         VARCHAR2(255),
+    house_price   INTEGER,
+    CONSTRAINT sets_pk PRIMARY KEY (color)
+);
+
+CREATE TABLE games (
+    id            INTEGER,
+    rng_seed      INTEGER,
+    friendly_name NVARCHAR2(255),
+    CONSTRAINT games_pk PRIMARY KEY (id)
+);
+
+CREATE TABLE items (
+    id            INTEGER,
+    type          INTEGER,
+    CONSTRAINT items_pk PRIMARY KEY (id)
+);
+
+CREATE TABLE properties (
+    id            INTEGER,
+    set_color     VARCHAR2(255),
+    name          VARCHAR2(255),
+    price         INTEGER,
+    CONSTRAINT properties_pk PRIMARY KEY (id),
+    CONSTRAINT properties_set_fk FOREIGN KEY (set_color) REFERENCES sets (color)
+);
+
+CREATE TABLE players (
+    game             INTEGER,
+    pawn             INTEGER,
+    current_position INTEGER,
+    username         VARCHAR2(255),
+    CONSTRAINT players_pk PRIMARY KEY (game, pawn),
+    CONSTRAINT players_game_fk FOREIGN KEY (game) REFERENCES games (id)
+);
+
+CREATE TABLE property_items (
+    id            INTEGER,
+    property      INTEGER,
+    CONSTRAINT property_items_pk PRIMARY KEY (id),
+    CONSTRAINT property_items_item_fk FOREIGN KEY (id) REFERENCES items (id),
+    CONSTRAINT property_items_property_fk FOREIGN KEY (property) REFERENCES properties (id)
+);
+
+CREATE TABLE cashbag_items (
+    id            INTEGER,
+    count         INTEGER,
+    CONSTRAINT cashbag_items_pk PRIMARY KEY (id),
+    CONSTRAINT cashbag_items_item_fk FOREIGN KEY (id) REFERENCES items (id)
+);
+
+CREATE TABLE transactions (
+    id            INTEGER,
+    game          INTEGER,
+    from_pawn     INTEGER,
+    to_pawn       INTEGER,
+    item          INTEGER,
+    trade_key     INTEGER,
+    CONSTRAINT transactions_pk PRIMARY KEY (id),
+    CONSTRAINT transactions_trade_key_uk UNIQUE (trade_key),
+    CONSTRAINT transactions_game_fk FOREIGN KEY (game) REFERENCES games (id),
+    CONSTRAINT transactions_item_fk FOREIGN KEY (item) REFERENCES items (id),
+    CONSTRAINT transactions_from_fk FOREIGN KEY (game, from_pawn) REFERENCES players (game, pawn),
+    CONSTRAINT transactions_to_fk FOREIGN KEY (game, to_pawn) REFERENCES players (game, pawn)
+);
+
+CREATE TABLE board_squares (
+    position      INTEGER,
+    name          VARCHAR2(255),
+    kind          VARCHAR2(20),
+    property      INTEGER,
+    CONSTRAINT board_squares_pk PRIMARY KEY (position),
+    CONSTRAINT board_squares_property_uk UNIQUE (property),
+    CONSTRAINT board_squares_kind_ck CHECK
+        (kind IN ('GO', 'PROPERTY', 'RAILROAD', 'UTILITY', 'TAX',
+                  'CHANCE', 'COMMUNITY_CHEST', 'JAIL', 'FREE_PARKING', 'GO_TO_JAIL')),
+    CONSTRAINT board_squares_property_fk FOREIGN KEY (property) REFERENCES properties (id)
+);
+
+CREATE TABLE cards (
+    id            INTEGER,
+    deck          VARCHAR2(20),
+    description   VARCHAR2(255),
+    cash_delta    INTEGER DEFAULT 0,
+    CONSTRAINT cards_pk PRIMARY KEY (id),
+    CONSTRAINT cards_deck_ck CHECK (deck IN ('CHANCE', 'COMMUNITY_CHEST'))
+);
+
+CREATE TABLE dice_rolls (
+    game          INTEGER,
+    pawn          INTEGER,
+    turn_no       INTEGER,
+    die1          INTEGER,
+    die2          INTEGER,
+    CONSTRAINT dice_rolls_pk PRIMARY KEY (game, pawn, turn_no),
+    CONSTRAINT dice_rolls_die1_ck CHECK (die1 BETWEEN 1 AND 6),
+    CONSTRAINT dice_rolls_die2_ck CHECK (die2 BETWEEN 1 AND 6),
+    CONSTRAINT dice_rolls_player_fk FOREIGN KEY (game, pawn) REFERENCES players (game, pawn)
+);
+
+CREATE TABLE card_draws (
+    id            INTEGER,
+    game          INTEGER,
+    pawn          INTEGER,
+    card          INTEGER,
+    turn_no       INTEGER,
+    CONSTRAINT card_draws_pk PRIMARY KEY (id),
+    CONSTRAINT card_draws_player_fk FOREIGN KEY (game, pawn) REFERENCES players (game, pawn),
+    CONSTRAINT card_draws_card_fk FOREIGN KEY (card) REFERENCES cards (id)
+);
+
+-- SCRIPT INSERT
+
+INSERT INTO sets VALUES ('Brown', 50);
+INSERT INTO sets VALUES ('Light Blue', 50);
+INSERT INTO sets VALUES ('Pink', 100);
+INSERT INTO sets VALUES ('Orange', 100);
+INSERT INTO sets VALUES ('Red', 150);
+INSERT INTO sets VALUES ('Yellow', 150);
+INSERT INTO sets VALUES ('Green', 200);
+INSERT INTO sets VALUES ('Dark Blue', 200);
+
+INSERT INTO properties VALUES (1, 'Brown', 'Mediterranean Avenue', 60);
+INSERT INTO properties VALUES (2, 'Brown', 'Baltic Avenue', 60);
+INSERT INTO properties VALUES (3, 'Light Blue', 'Oriental Avenue', 100);
+INSERT INTO properties VALUES (4, 'Light Blue', 'Vermont Avenue', 100);
+INSERT INTO properties VALUES (5, 'Light Blue', 'Connecticut Avenue', 120);
+INSERT INTO properties VALUES (6, 'Pink', 'St. Charles Place', 140);
+INSERT INTO properties VALUES (7, 'Pink', 'States Avenue', 140);
+INSERT INTO properties VALUES (8, 'Pink', 'Virginia Avenue', 160);
+INSERT INTO properties VALUES (9, 'Orange', 'St. James Place', 180);
+INSERT INTO properties VALUES (10, 'Orange', 'Tennessee Avenue', 180);
+INSERT INTO properties VALUES (11, 'Orange', 'New York Avenue', 200);
+INSERT INTO properties VALUES (12, 'Red', 'Kentucky Avenue', 220);
+INSERT INTO properties VALUES (13, 'Red', 'Indiana Avenue', 220);
+INSERT INTO properties VALUES (14, 'Red', 'Illinois Avenue', 240);
+INSERT INTO properties VALUES (15, 'Yellow', 'Atlantic Avenue', 260);
+INSERT INTO properties VALUES (16, 'Yellow', 'Ventnor Avenue', 260);
+INSERT INTO properties VALUES (17, 'Yellow', 'Marvin Gardens', 280);
+INSERT INTO properties VALUES (18, 'Green', 'Pacific Avenue', 300);
+INSERT INTO properties VALUES (19, 'Green', 'North Carolina Avenue', 300);
+INSERT INTO properties VALUES (20, 'Green', 'Pennsylvania Avenue', 320);
+INSERT INTO properties VALUES (21, 'Dark Blue', 'Park Place', 350);
+INSERT INTO properties VALUES (22, 'Dark Blue', 'Boardwalk', 400);
+
+INSERT INTO games VALUES (1, 424242, 'Friday Night Game');
+INSERT INTO games VALUES (2, 131313, 'Sunday Rematch');
+INSERT INTO games VALUES (3, 777001, 'Office Tournament');
+INSERT INTO games VALUES (4, 555222, 'Family Game');
+INSERT INTO games VALUES (5, 909090, 'Online Blitz');
+
+INSERT INTO players VALUES (1, 1, 0, 'alice');
+INSERT INTO players VALUES (1, 2, 5, 'bob');
+INSERT INTO players VALUES (1, 3, 12, NULL);
+INSERT INTO players VALUES (2, 1, 0, 'carol');
+INSERT INTO players VALUES (2, 2, 8, 'dave');
+INSERT INTO players VALUES (3, 1, 3, 'erin');
+INSERT INTO players VALUES (3, 2, 0, 'frank');
+INSERT INTO players VALUES (4, 1, 0, 'grace');
+INSERT INTO players VALUES (5, 1, 0, 'heidi');
+
+-- items.type: 0 = property item, 1 = cashbag item
+INSERT INTO items VALUES (1, 0);
+INSERT INTO items VALUES (2, 0);
+INSERT INTO items VALUES (3, 0);
+INSERT INTO items VALUES (4, 1);
+INSERT INTO items VALUES (5, 1);
+INSERT INTO items VALUES (6, 1);
+INSERT INTO items VALUES (7, 0);
+INSERT INTO items VALUES (8, 0);
+INSERT INTO items VALUES (9, 1);
+INSERT INTO items VALUES (10, 1);
+
+INSERT INTO property_items VALUES (1, 1);
+INSERT INTO property_items VALUES (2, 21);
+INSERT INTO property_items VALUES (3, 9);
+INSERT INTO property_items VALUES (7, 5);
+INSERT INTO property_items VALUES (8, 14);
+
+INSERT INTO cashbag_items VALUES (4, 200);
+INSERT INTO cashbag_items VALUES (5, 50);
+INSERT INTO cashbag_items VALUES (6, 1500);
+INSERT INTO cashbag_items VALUES (9, 300);
+INSERT INTO cashbag_items VALUES (10, 75);
+
+-- from_pawn NULL models a movement originating from the bank
+INSERT INTO transactions VALUES (1, 1, NULL, 1, 6, NULL);
+INSERT INTO transactions VALUES (2, 1, NULL, 2, 1, NULL);
+INSERT INTO transactions VALUES (3, 1, NULL, 1, 2, NULL);
+INSERT INTO transactions VALUES (4, 1, 1, 3, 2, 1000);
+INSERT INTO transactions VALUES (5, 1, 3, 1, 4, 1001);
+
+INSERT INTO board_squares VALUES (0, 'Go', 'GO', NULL);
+INSERT INTO board_squares VALUES (1, 'Mediterranean Avenue', 'PROPERTY', 1);
+INSERT INTO board_squares VALUES (2, 'Community Chest', 'COMMUNITY_CHEST', NULL);
+INSERT INTO board_squares VALUES (3, 'Baltic Avenue', 'PROPERTY', 2);
+INSERT INTO board_squares VALUES (4, 'Income Tax', 'TAX', NULL);
+INSERT INTO board_squares VALUES (5, 'Reading Railroad', 'RAILROAD', NULL);
+INSERT INTO board_squares VALUES (6, 'Oriental Avenue', 'PROPERTY', 3);
+INSERT INTO board_squares VALUES (7, 'Chance', 'CHANCE', NULL);
+INSERT INTO board_squares VALUES (10, 'Jail', 'JAIL', NULL);
+INSERT INTO board_squares VALUES (11, 'St. Charles Place', 'PROPERTY', 6);
+INSERT INTO board_squares VALUES (20, 'Free Parking', 'FREE_PARKING', NULL);
+INSERT INTO board_squares VALUES (30, 'Go To Jail', 'GO_TO_JAIL', NULL);
+
+INSERT INTO cards VALUES (1, 'COMMUNITY_CHEST', 'Bank error in your favor. Collect $200', 200);
+INSERT INTO cards VALUES (2, 'CHANCE', 'Advance to Boardwalk', 0);
+INSERT INTO cards VALUES (3, 'CHANCE', 'Pay poor tax of $15', -15);
+INSERT INTO cards VALUES (4, 'COMMUNITY_CHEST', 'Doctor''s fee. Pay $50', -50);
+INSERT INTO cards VALUES (5, 'CHANCE', 'Your building loan matures. Collect $150', 150);
+INSERT INTO cards VALUES (6, 'COMMUNITY_CHEST', 'Go directly to Jail', 0);
+
+INSERT INTO dice_rolls VALUES (1, 1, 1, 3, 4);
+INSERT INTO dice_rolls VALUES (1, 1, 2, 6, 2);
+INSERT INTO dice_rolls VALUES (1, 2, 1, 5, 5);
+INSERT INTO dice_rolls VALUES (1, 3, 1, 1, 2);
+INSERT INTO dice_rolls VALUES (2, 1, 1, 4, 3);
+INSERT INTO dice_rolls VALUES (2, 2, 1, 6, 6);
+
+INSERT INTO card_draws VALUES (1, 1, 1, 1, 1);
+INSERT INTO card_draws VALUES (2, 1, 2, 3, 1);
+INSERT INTO card_draws VALUES (3, 1, 3, 2, 1);
+INSERT INTO card_draws VALUES (4, 2, 1, 4, 1);
+INSERT INTO card_draws VALUES (5, 2, 2, 5, 1);
+
+COMMIT;
